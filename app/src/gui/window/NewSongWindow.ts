@@ -202,30 +202,28 @@ export class NewSongWindow extends Window {
         const file = fileSelector.files?.[0]
         if (!file) return
 
-        // Remove the old file
-        if (
-          this.sm.properties[propName] &&
-          this.fileTable[this.sm.properties[propName]]
-        ) {
-          delete this.fileTable[this.sm.properties[propName]]
+        if (this.sm.properties[propName]) {
+          if (this.fileTable[this.sm.properties[propName]!]) {
+            delete this.fileTable[this.sm.properties[propName]!]
+          }
+          let fileName = file.name
+          // Prevent file conflicts. Same file is ok, but same name different file not ok
+          while (
+            this.fileTable[file.name] &&
+            (this.fileTable[file.name].size != file.size ||
+              this.fileTable[file.name].type != file.type)
+          ) {
+            fileName = "_" + fileName
+          }
+          this.fileTable[fileName] = file
+          input.value = fileName
+          this.sm.properties[propName] = input.value
+          deleteButton.disabled = false
         }
-
-        let fileName = file.name
-        // Prevent file conflicts. Same file is ok, but same name different file not ok
-        while (
-          this.fileTable[file.name] &&
-          (this.fileTable[file.name].size != file.size ||
-            this.fileTable[file.name].type != file.type)
-        ) {
-          fileName = "_" + fileName
-        }
-        this.fileTable[fileName] = file
-        input.value = fileName
-        this.sm.properties[propName] = input.value
-        deleteButton.disabled = false
       }
       fileSelector.click()
     }
+
     input.value = this.sm.properties[propName] ?? ""
     container.appendChild(input)
 
@@ -234,15 +232,14 @@ export class NewSongWindow extends Window {
     deleteButton.classList.add("delete")
     deleteButton.disabled = true
     deleteButton.onclick = () => {
-      if (
-        this.sm.properties[propName] &&
-        this.fileTable[this.sm.properties[propName]]
-      ) {
-        delete this.fileTable[this.sm.properties[propName]]
+      if (this.sm.properties[propName]) {
+        if (this.fileTable[this.sm.properties[propName]!]) {
+          delete this.fileTable[this.sm.properties[propName]!]
+        }
+        this.sm.properties[propName] = undefined
+        input.value = ""
+        deleteButton.disabled = true
       }
-      this.sm.properties[propName] = undefined
-      input.value = ""
-      deleteButton.disabled = true
     }
     const icon = Icons.getIcon("TRASH", 12)
     deleteButton.appendChild(icon)
